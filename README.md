@@ -1,6 +1,6 @@
 # CQuery
 
-## A JQuery inspired single header library for C++
+## A JQuery inspired library for C++
 
 Using only the C++ standard library, I wanted to create a simple and easy to use library for creating web servers to impress my friends, classmates, and family. I have found the experience with JavaScript great, mainly with the JQuery library. And so, I tried creating something similar.
 
@@ -13,7 +13,7 @@ I love JQuery, I love C++, why not have both?
 ```cpp
 #include <iostream>
 #include <filesystem>
-#include "CQuery.hpp"
+#include <CQuery.hpp> // Counting as a header in system path
 
 int main(const int, const char**)
 {
@@ -51,10 +51,30 @@ int main(const int, const char**)
 }
 ```
 
-## Features
+Serves for things not related to servers too!
 
-- Not yet implemented
+```cpp
+// Counting as a headers in system path
+#include <CQuery/util/out.hpp>
+#include <CQuery/util/proc.hpp>
+
+int main(int, char** argv)
+{
+  using namespace CQuery;
+
+  if (argv[1] == "debug") {
+    OutputMethod() = OUT_METHOD::CMD;
+  } else {
+    OutputMethod() = OUT_METHOD::SILENT;
+  }
+
+  // Works for anyone that can't be bothered to use conditional compilation
+  Output() << "Hello World" << '\n';
+
+  return 0;
+}
+```
 
 ## Contributing
 
-Feel free to contribute to this project with whatever you find relevant to it.
+Feel free to contribute to this project with whatever you find relevant to it. More information in the [**documentation**](https://github.com/IanSouzaFreire/CQuery/tree/main/docs/).

@@ -1,3 +1,9 @@
+# temporary
+docs/
+
+# temporary files
+*.tmp.*
+
 # directories
 build/
 .vscode/

@@ -1,64 +1,10 @@
-#ifndef SERVERCLIENT_HPP
-#define SERVERCLIENT_HPP
-
-#ifdef _WIN32
-#include <winsock2.h>
-#include <Windows.h>
-#include <Ws2tcpip.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <unistd.h>
-// #pragma comment(lib, "ws2_32.lib")
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#endif
-
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <cstdlib>
-#include <exception>
-#include <vector>
-#include <stdexcept>
-#include <cstring>
-#include <cerrno>
-#include <thread>
-#include <atomic>
+#ifndef HOST_HPP
+#define HOST_HPP
 
 namespace CQuery {
 
-enum class OUT_METHOD {
-  _SET_,
-  _OUT_,
-  CMD,
-  FILE,
-  SILENT
-};
-
-OUT_METHOD& OutputMethod() {
-  static OUT_METHOD current = OUT_METHOD::CMD;
-  return current;
-}
-
-std::ostream& Output() {
-  switch (OutputMethod()) {
-    case OUT_METHOD::CMD:
-      return std::cout;
-    case OUT_METHOD::FILE:
-      static std::ofstream fileStream("h.log");
-      return fileStream;
-    case OUT_METHOD::SILENT:
-      static std::ostream nullStream(nullptr);
-      return nullStream;
-    default:
-      return std::cout;
-  }
-}
-
 #ifdef _WIN32
+// Initialize Winsock for Windows
 void initWinsock()
 {
   WSADATA wsaData;
@@ -69,48 +15,11 @@ void initWinsock()
 }
 #endif
 
-int findAvailablePort(int startPort, int endPort)
-{
-#ifdef _WIN32
-  initWinsock();
-#endif
-
-  for (int port = startPort; port <= endPort; port++) {
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-#ifdef _WIN32
-      std::cerr << "Error creating socket: " << WSAGetLastError() << '\n';
-#else
-      std::cerr << "Error creating socket: " << strerror(errno) << " (errno: " << errno << ")" << '\n';
-#endif
-      continue;  // Try the next port instead of returning immediately
-    }
-
-    struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
-
-    if (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
-      close(sockfd);
-      return port;
-    }
-
-    close(sockfd);
-  }
-
-  return -1; // no available port found
-}
-
-template <class fun_t>
-fun_t proc(fun_t (*fun))
-{ return fun(); }
-
-template <class fun_t, class F>
-fun_t proc(F&& fun)
-{ return fun(); }
+class Element;
+class _$;
 
 class ServerClient {
+  friend class _$;
   int serverSocket_;
   struct sockaddr_in serverAddress_;
   struct sockaddr_in clientAddress_;
@@ -127,6 +36,7 @@ class ServerClient {
   std::condition_variable pauseCondition_;
   std::mutex pauseMutex_;
 
+  // Read file content
   std::string readFile(const std::string& filePath)
   {
     std::ifstream file(filePath);
@@ -136,7 +46,9 @@ class ServerClient {
     return std::string((std::istreambuf_iterator<char>(file)),
                         std::istreambuf_iterator<char>());
   }
+
 public:
+  // Constructor
   ServerClient(int port) : paused_(false)
   {
 #ifdef _WIN32
@@ -155,9 +67,9 @@ public:
 
     serverAddress_.sin_family = AF_INET;
     serverAddress_.sin_port = htons(port);
-    serverAddress_.sin_addr.s_addr = INADDR_ANY;  // Changed this line
+    serverAddress_.sin_addr.s_addr = INADDR_ANY;
 
-    // Add this: allow reuse of the address
+    // Allow reuse of the address
     int opt = 1;
     if (setsockopt(serverSocket_, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt)) < 0)
     {
@@ -188,7 +100,8 @@ public:
 
     running_ = false;
   }
-  
+
+  // Destructor
   ~ServerClient()
   {
     closeServer();
@@ -200,6 +113,7 @@ public:
 #endif
   }
 
+  // Start the server
   void startServer()
   {
     running_ = true;
@@ -207,6 +121,7 @@ public:
     Output() << "Server started. Listening for incoming connections..." << '\n';
   }
 
+  // Close the server
   void closeServer()
   {
     running_ = false;
@@ -216,12 +131,14 @@ public:
     Output() << "Server stopped." << '\n';
   }
 
+  // Pause the server
   void pauseServer()
   {
     paused_ = true;
     Output() << "Server paused." << '\n';
   }
 
+  // Resume the server
   void resumeServer()
   {
     paused_ = false;
@@ -229,6 +146,7 @@ public:
     Output() << "Server resumed." << '\n';
   }
 
+  // Handle client connection
   void handleClient(int clientSocket)
   {
     Output() << "Client connected." << '\n';
@@ -270,12 +188,46 @@ public:
 #endif
   }
 
+  // Change the context (HTML and CSS content)
   void changeContext(const std::string& htmlFilePath, const std::string& cssFilePath)
   {
     htmlFile_ = readFile(htmlFilePath);
     cssFile_ = readFile(cssFilePath);
   }
+
+  // Open the server URL in the default browser
+  void openInBrowser() {
+    std::string url = "http://localhost:" + std::to_string(ntohs(serverAddress_.sin_port));
+
+#ifdef _WIN32
+    // Windows-specific code
+    SHELLEXECUTEINFOA shellExecuteInfo = {0};
+    shellExecuteInfo.cbSize = sizeof(SHELLEXECUTEINFOA);
+    shellExecuteInfo.fMask = SEE_MASK_NOASYNC;
+    shellExecuteInfo.lpVerb = "open";
+    shellExecuteInfo.lpFile = url.c_str();
+    shellExecuteInfo.nShow = SW_SHOWNORMAL;
+
+    if (ShellExecuteExA(&shellExecuteInfo)) {
+      Output() << "Opened " << url << " in the default browser.\n";
+    } else {
+      DWORD error = GetLastError();
+      Output() << "Failed to open browser. Error code: " << error << "\n";
+    }
+#else
+    // Unix-like systems (Linux, macOS)
+    std::string cmd = "xdg-open " + url + " || open " + url + " || echo 'Unable to open browser automatically'";
+    int result = system(cmd.c_str());
+    if (result == 0) {
+      Output() << "Opened " << url << " in the default browser.\n";
+    } else {
+      Output() << "Failed to open browser. Please open " << url << " manually.\n";
+    }
+#endif
+  }
+
 private:
+  // Main server loop
   void serverLoop()
   {
     while (running_)
@@ -305,4 +257,4 @@ private:
 
 }
 
-#endif  // SERVERCLIENT_HPP
+#endif
