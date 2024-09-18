@@ -8,13 +8,14 @@
 - Add conditional compilation to handle Windows and Linux
 
 # In-progress
+- JQuery's "$()" and others as such
+- JQuery's "html()" and "css()" methods
+- Overloading in functions to be able to use values/functions/lambda expressions <br /> As in javascript: ```$().m(function () {});``` or ```$().m(() => {});``` or ```$().m(foo())```
 
 # To-start
-- JQuery's "$()" and others as such
+- Do my fucking homework and start documentation
 - Representatives of the most used/important JQuery methods and capabilities
 - Function or class to interact with server similar to JQuery
-- JQuery's "html()" and "css()" methods
-- Overloading in functions to be able to use values/functions/lambda expressions <br /> As in javascript: ```$().m(function () {});``` or ```$().m(() => {});```
 - Standard operations for handling requests and responses
 - Standard operations for handling sessions, saving them to a dedicated binary data file
 - Standard operations for handling cookies, saving them to a dedicated binary data file

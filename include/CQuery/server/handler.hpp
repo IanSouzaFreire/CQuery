@@ -1,5 +1,5 @@
-#ifndef HANDLER_HPP
-#define HANDLER_HPP
+#ifndef CQUERY_SERVER_HANDLER_HPP
+#define CQUERY_SERVER_HANDLER_HPP
 
 namespace CQuery {
 

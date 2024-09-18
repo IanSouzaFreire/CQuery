@@ -1,5 +1,5 @@
-#ifndef PORT_HPP
-#define PORT_HPP
+#ifndef CQUERY_UTIL_PORT_HPP
+#define CQUERY_UTIL_PORT_HPP
 
 namespace CQuery {
 

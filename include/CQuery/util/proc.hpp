@@ -1,5 +1,5 @@
-#ifndef PROC_HPP
-#define PROC_HPP
+#ifndef CQUERY_UTIL_PROC_HPP
+#define CQUERY_UTIL_PROC_HPP
 
 namespace CQuery {
 

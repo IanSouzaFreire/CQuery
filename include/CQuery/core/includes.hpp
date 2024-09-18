@@ -1,5 +1,5 @@
-#ifndef INCLUDES_HPP
-#define INCLUDES_HPP
+#ifndef CQUERY_CORE_INCLUDES_HPP
+#define CQUERY_CORE_INCLUDES_HPP
 
 #include <unordered_map>
 #include <sstream>
@@ -16,6 +16,9 @@
 #include <cerrno>
 #include <thread>
 #include <atomic>
+#include <unordered_map>
+#include <functional>
+#include <typeindex>
 
 // Platform-specific includes
 #ifdef _WIN32

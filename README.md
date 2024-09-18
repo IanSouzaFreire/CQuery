@@ -8,6 +8,10 @@ Using only the C++ standard library, I wanted to create a simple and easy to use
 
 I love JQuery, I love C++, why not have both?
 
+## Information
+
+This library uses catchorgs's [**Catch2**](https://github.com/catchorg/Catch2) for unit testing. To test the library, go to the "tests" directory and compile the code
+
 ## Usage
 
 ```cpp

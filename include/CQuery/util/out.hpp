@@ -1,5 +1,5 @@
-#ifndef OUT_HPP
-#define OUT_HPP
+#ifndef CQUERY_UTIL_OUT_HPP
+#define CQUERY_UTIL_OUT_HPP
 
 namespace CQuery {
 

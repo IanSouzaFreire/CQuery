@@ -1,5 +1,5 @@
-#ifndef HOST_HPP
-#define HOST_HPP
+#ifndef CQUERY_SERVER_HOST_HPP
+#define CQUERY_SERVER_HOST_HPP
 
 namespace CQuery {
 
@@ -20,6 +20,7 @@ class _$;
 
 class ServerClient {
   friend class _$;
+  std::unordered_map<std::string, std::any> userProcs_;
   int serverSocket_;
   struct sockaddr_in serverAddress_;
   struct sockaddr_in clientAddress_;
@@ -196,7 +197,8 @@ public:
   }
 
   // Open the server URL in the default browser
-  void openInBrowser() {
+  void openInBrowser()
+  {
     std::string url = "http://localhost:" + std::to_string(ntohs(serverAddress_.sin_port));
 
 #ifdef _WIN32
@@ -226,6 +228,46 @@ public:
 #endif
   }
 
+  template <typename F>
+  void userProc(const std::string& name, F&& func)
+  {
+    userProcs_[name] = std::forward<F>(func);
+  }
+
+  template <typename F>
+  F& getUserProc(const std::string& name)
+  {
+    return std::any_cast<F&>(userProcs_[name]);
+  }
+
+  template <typename F>
+  auto executeUserProc(const std::string& name)
+  {
+    return std::any_cast<F&>(userProcs_[name])(running_, clientAddress_, serverSocket_);
+  }
+
+  template <typename F, typename... Args>
+  auto executeUserProc(const std::string& name, Args&&... args)
+  {
+    return std::any_cast<F&>(userProcs_[name])(std::forward<Args>(args)...);
+  }
+
+  template <typename F, typename... Args>
+  auto executeUserProcWithState(const std::string& name, Args&&... args)
+  {
+    return std::any_cast<F&>(userProcs_[name])(running_, clientAddress_, serverSocket_, std::forward<Args>(args)...);
+  }
+
+  bool hasUserProc(const std::string& name) const
+  {
+    return userProcs_.find(name) != userProcs_.end();
+  }
+
+  void removeUserProc(const std::string& name)
+  {
+    userProcs_.erase(name);
+  }
+
 private:
   // Main server loop
   void serverLoop()
@@ -239,19 +281,50 @@ private:
 
       if (!running_) break;
 
-      clientAddressLength_ = sizeof(clientAddress_);
-      int clientSocket = accept(serverSocket_, (struct sockaddr*)&clientAddress_, &clientAddressLength_);
-      
-      if (clientSocket < 0)
-      {
-        if (running_) {
-          Output() << "Error accepting client connection." << '\n';
-        }
-        continue;
-      }
+      try {
+        if (hasUserProc("serverLoop")) {
+          // Call user-defined serverLoop function if it exists
+          executeUserProcWithState<void(std::atomic<bool>&, sockaddr_in&, int)>("serverLoop");
+        } else {
+          // Default server loop behavior
+          clientAddressLength_ = sizeof(clientAddress_);
+          int clientSocket = accept(serverSocket_, (struct sockaddr*)&clientAddress_, &clientAddressLength_);
+          
+          if (clientSocket < 0)
+          {
+            if (running_) {
+              Output() << "Error accepting client connection." << '\n';
+            }
+            continue;
+          }
 
-      handleClient(clientSocket);
+          handleClient(clientSocket);
+        }
+      } catch (const std::exception& e) {
+        Output() << "Exception in server loop: " << e.what() << '\n';
+      } catch (...) {
+        Output() << "Unknown exception in server loop\n";
+      }
     }
+  }
+
+  // Add a method to get the server socket
+  int getServerSocket() const {
+    return serverSocket_;
+  }
+
+  // Add a method to get the client address
+  const sockaddr_in& getClientAddress() const {
+    return clientAddress_;
+  }
+
+  // Add a method to get the client address length
+  #ifdef _WIN32
+  int getClientAddressLength() const {
+  #else
+  socklen_t getClientAddressLength() const {
+  #endif
+    return clientAddressLength_;
   }
 };
 
