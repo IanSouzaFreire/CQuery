@@ -1,3 +1,34 @@
+/*
+* ;-; It looks way better in a mono font...
+* ╔═════════════════════════════════════╗
+* ║         ███████         █████       ║
+* ║       ███████████         ████      ║
+* ║      █████████████  ███    ████     ║
+* ║     ████       ████  ███   ████     ║
+* ║    ███           ██   ██   █████    ║
+* ║    ██             █   ███   ████    ║
+* ║   ██  CQuery           ██   ████    ║
+* ║   ██                   ██    ███    ║
+* ║   █   Bringing         ██    ███    ║
+* ║   ██  local servers    ██    ███    ║
+* ║   ██  to C++           ██   ████    ║
+* ║    ██             █   ███   ████    ║
+* ║    ███           ██   ██   █████    ║
+* ║     ████       ████  ███   ████     ║
+* ║      █████████████  ███    ████     ║
+* ║       ███████████         ████      ║
+* ║         ███████         █████       ║
+* ╚═════════════════════════════════════╝
+*
+* CQuery - https://github.com/IanSouzaFreire/CQuery
+* From - https://github.com/IanSouzaFreire
+*
+* A library made to work with localhost in multiple
+* operating systems, since I was tired of rewriting
+* these things to different OS'es.
+* Inspired by the javascript framework JQuery.
+*/
+
 #ifndef CQUERY_HPP
 #define CQUERY_HPP
 
