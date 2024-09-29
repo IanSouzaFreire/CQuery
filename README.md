@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="public/images/Frame 1.svg">
+</div>
+
 # CQuery
 
 ## A JQuery inspired library for C++
