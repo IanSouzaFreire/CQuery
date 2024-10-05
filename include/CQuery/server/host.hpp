@@ -1,19 +1,13 @@
 #ifndef CQUERY_SERVER_HOST_HPP
 #define CQUERY_SERVER_HOST_HPP
 
-namespace CQuery {
-
 #ifdef _WIN32
-// Initialize Winsock for Windows
-void initWinsock()
-{
-  WSADATA wsaData;
-  if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-  {
-    throw std::runtime_error("Error initializing Winsock.");
-  }
-}
+#include <CQuery/platform/windows/host.hpp>
+#else
+#include <CQuery/platform/linux/host.hpp>
 #endif
+
+namespace CQuery {
 
 class Element;
 class _$;
@@ -37,7 +31,6 @@ class ServerClient {
   std::condition_variable pauseCondition_;
   std::mutex pauseMutex_;
 
-  // Read file content
   std::string readFile(const std::string& filePath)
   {
     std::ifstream file(filePath);
@@ -49,60 +42,9 @@ class ServerClient {
   }
 
 public:
-  // Constructor
-  ServerClient(int port) : paused_(false)
-  {
-#ifdef _WIN32
-    initWinsock();
-#endif
-    serverSocket_ = socket(AF_INET, SOCK_STREAM, 0);
+  // Platform specific
+  ServerClient(int port) : paused_(false);
 
-    if (serverSocket_ < 0)
-    {
-#ifdef _WIN32
-      throw std::runtime_error("Error creating server socket: " + std::to_string(WSAGetLastError()));
-#else
-      throw std::runtime_error("Error creating server socket: " + std::string(strerror(errno)));
-#endif
-    }
-
-    serverAddress_.sin_family = AF_INET;
-    serverAddress_.sin_port = htons(port);
-    serverAddress_.sin_addr.s_addr = INADDR_ANY;
-
-    // Allow reuse of the address
-    int opt = 1;
-    if (setsockopt(serverSocket_, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt)) < 0)
-    {
-#ifdef _WIN32
-      throw std::runtime_error("Error setting socket option: " + std::to_string(WSAGetLastError()));
-#else
-      throw std::runtime_error("Error setting socket option: " + std::string(strerror(errno)));
-#endif
-    }
-
-    if (bind(serverSocket_, (struct sockaddr*)&serverAddress_, sizeof(serverAddress_)) < 0)
-    {
-#ifdef _WIN32
-      throw std::runtime_error("Error binding server socket to address: " + std::to_string(WSAGetLastError()));
-#else
-      throw std::runtime_error("Error binding server socket to address: " + std::string(strerror(errno)));
-#endif
-    }
-
-    if (listen(serverSocket_, 3) < 0)
-    {
-#ifdef _WIN32
-      throw std::runtime_error("Error listening on server socket: " + std::to_string(WSAGetLastError()));
-#else
-      throw std::runtime_error("Error listening on server socket: " + std::string(strerror(errno)));
-#endif
-    }
-
-    running_ = false;
-  }
-
-  // Destructor
   ~ServerClient()
   {
     closeServer();
@@ -114,7 +56,6 @@ public:
 #endif
   }
 
-  // Start the server
   void startServer()
   {
     running_ = true;
@@ -122,7 +63,6 @@ public:
     Output() << "Server started. Listening for incoming connections..." << '\n';
   }
 
-  // Close the server
   void closeServer()
   {
     running_ = false;
@@ -132,14 +72,12 @@ public:
     Output() << "Server stopped." << '\n';
   }
 
-  // Pause the server
   void pauseServer()
   {
     paused_ = true;
     Output() << "Server paused." << '\n';
   }
 
-  // Resume the server
   void resumeServer()
   {
     paused_ = false;
@@ -147,7 +85,6 @@ public:
     Output() << "Server resumed." << '\n';
   }
 
-  // Handle client connection
   void handleClient(int clientSocket)
   {
     Output() << "Client connected." << '\n';
@@ -165,11 +102,9 @@ public:
     std::string contentType;
 
     if (request.find("GET /style.css") != std::string::npos) {
-      // Serve CSS content
       contentType = "text/css";
       response = cssFile_;
     } else {
-      // Serve HTML content by default
       contentType = "text/html";
       response = htmlFile_;
     }
@@ -189,44 +124,14 @@ public:
 #endif
   }
 
-  // Change the context (HTML and CSS content)
   void changeContext(const std::string& htmlFilePath, const std::string& cssFilePath)
   {
     htmlFile_ = readFile(htmlFilePath);
     cssFile_ = readFile(cssFilePath);
   }
 
-  // Open the server URL in the default browser
-  void openInBrowser()
-  {
-    std::string url = "http://localhost:" + std::to_string(ntohs(serverAddress_.sin_port));
-
-#ifdef _WIN32
-    // Windows-specific code
-    SHELLEXECUTEINFOA shellExecuteInfo = {0};
-    shellExecuteInfo.cbSize = sizeof(SHELLEXECUTEINFOA);
-    shellExecuteInfo.fMask = SEE_MASK_NOASYNC;
-    shellExecuteInfo.lpVerb = "open";
-    shellExecuteInfo.lpFile = url.c_str();
-    shellExecuteInfo.nShow = SW_SHOWNORMAL;
-
-    if (ShellExecuteExA(&shellExecuteInfo)) {
-      Output() << "Opened " << url << " in the default browser.\n";
-    } else {
-      DWORD error = GetLastError();
-      Output() << "Failed to open browser. Error code: " << error << "\n";
-    }
-#else
-    // Unix-like systems (Linux, macOS)
-    std::string cmd = "xdg-open " + url + " || open " + url + " || echo 'Unable to open browser automatically'";
-    int result = system(cmd.c_str());
-    if (result == 0) {
-      Output() << "Opened " << url << " in the default browser.\n";
-    } else {
-      Output() << "Failed to open browser. Please open " << url << " manually.\n";
-    }
-#endif
-  }
+  // Platform specific
+  void openInBrowser();
 
   template <typename F>
   void userProc(const std::string& name, F&& func)
@@ -269,7 +174,6 @@ public:
   }
 
 private:
-  // Main server loop
   void serverLoop()
   {
     while (running_)
@@ -283,10 +187,8 @@ private:
 
       try {
         if (hasUserProc("serverLoop")) {
-          // Call user-defined serverLoop function if it exists
           executeUserProcWithState<void(std::atomic<bool>&, sockaddr_in&, int)>("serverLoop");
         } else {
-          // Default server loop behavior
           clientAddressLength_ = sizeof(clientAddress_);
           int clientSocket = accept(serverSocket_, (struct sockaddr*)&clientAddress_, &clientAddressLength_);
           
@@ -308,17 +210,14 @@ private:
     }
   }
 
-  // Add a method to get the server socket
   int getServerSocket() const {
     return serverSocket_;
   }
 
-  // Add a method to get the client address
   const sockaddr_in& getClientAddress() const {
     return clientAddress_;
   }
 
-  // Add a method to get the client address length
   #ifdef _WIN32
   int getClientAddressLength() const {
   #else

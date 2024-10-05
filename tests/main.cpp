@@ -235,3 +235,8 @@ TEST_CASE("CQuery Output functionality", "[output]")
     REQUIRE(buffer.str() == "Test output");
   }
 }
+
+int main(void)
+{
+  return 0;
+}

@@ -1,24 +1,27 @@
 #ifndef CQUERY_CORE_INCLUDES_HPP
 #define CQUERY_CORE_INCLUDES_HPP
 
-#include <unordered_map>
-#include <sstream>
 #include <condition_variable>
-#include <mutex>
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <cstdlib>
+#include <unordered_map>
+#include <string_view>
+#include <functional>
+#include <typeindex>
+#include <algorithm>
 #include <exception>
-#include <vector>
 #include <stdexcept>
+#include <iostream>
+#include <sstream>
 #include <cstring>
+#include <fstream>
+#include <cstdlib>
+#include <string>
+#include <memory>
+#include <vector>
 #include <cerrno>
 #include <thread>
 #include <atomic>
-#include <unordered_map>
-#include <functional>
-#include <typeindex>
+#include <mutex>
+#include <array>
 
 // Platform-specific includes
 #ifdef _WIN32

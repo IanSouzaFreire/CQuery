@@ -85,7 +85,6 @@ public:
     cache_[key] = result;
 
     if (max_size_ > 0 && cache_.size() > max_size_) {
-      // Evict the least recently used item
       cache_.erase(cache_.begin());
     }
 

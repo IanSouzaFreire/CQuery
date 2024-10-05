@@ -14,7 +14,9 @@ I love JQuery, I love C++, why not have both?
 
 ## Information
 
-This library uses catchorgs's [**Catch2**](https://github.com/catchorg/Catch2) for unit testing. To test the library, go to the "tests" directory and compile the code
+This repository uses catchorgs's [**Catch2**](https://github.com/catchorg/Catch2) for unit testing. To test the library.
+This repository uses auto-formatter to format code and ease understanding
+![Auto formate code](https://github.com/IanSouzaFreire/CQuery/workflows/Auto%20formate%20code/badge.svg)
 
 ## Usage
 
@@ -86,3 +88,5 @@ int main(int, char** argv)
 ## Contributing
 
 Feel free to contribute to this project with whatever you find relevant to it. More information in the [**documentation**](https://github.com/IanSouzaFreire/CQuery/tree/main/docs/).
+
+In case you find an error or unexpected behavior, send it via the github issues.
